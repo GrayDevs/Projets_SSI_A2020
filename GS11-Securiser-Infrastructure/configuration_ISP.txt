@@ -1,0 +1,45 @@
+! ---------------------------------------------------------------------------------------------!
+! Projet GS11 - Sécuriser l'infrastructure SI d'une entreprise
+!
+! Logiciel de simulation: Packet Tracer 7.2.2
+! Plateforme utilisée: Cisco IOS Software
+! ---------------------------------------------------------------------------------------------!
+!
+conf t
+!
+hostname ISP
+no ip domain lookup
+service password-encryption
+banner motd # Unauthorized Access is Prohibited #
+enable secret cisco
+!
+interface G0/0
+ ip address dhcp
+ no cdp enable
+ no shutdown
+!
+interface G1/0
+ ip address 200.165.100.1 255.255.255.252
+ no cdp enable
+ no shutdown
+!
+no ip http server
+no ip http secure-server
+!
+crypto key generate rsa 
+ip ssh version 2
+ip ssh authentication-retries 3
+ip ssh time-out 120
+!
+username admin privilege 15 secret cisco
+!
+line con 0
+ privilege level 15
+ logging synchronous
+ login
+line vty 0 4
+ login
+ transport input all
+ logging synchronous
+end
+copy running-config startup-config

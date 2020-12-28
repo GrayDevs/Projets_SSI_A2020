@@ -1,0 +1,105 @@
+! ---------------------------------------------------------------------------------------------!
+! Projet GS11 - Sécuriser l'infrastructure SI d'une entreprise
+!
+! Logiciel de simulation: Packet Tracer 7.2.2
+! Plateforme utilisée: Cisco IOS Software, C2960 Software (C2960-LANBASE-M), Version 12.2(25)FX 
+! ---------------------------------------------------------------------------------------------!
+!
+conf t
+!
+hostname SW1
+no ip domain-lookup
+service password-encryption
+banner motd # Unauthorized Access is Prohibited #
+enable secret cisco
+!
+vlan 2
+ name UTILISATEURS
+vlan 5
+ name GUEST
+vlan 99
+ name MANAGEMENT
+vlan 100
+ name SERVEURS
+!
+interface Vlan1
+ no ip address
+ shutdown
+ exit
+!
+interface Vlan99
+ ip address 192.168.99.100 255.255.255.0
+ no shutdown
+ exit
+!
+interface gigabitEthernet0/1
+ description Trunk vers FW 
+ switchport mode trunk
+ switchport trunk encapsulation dot1q
+ switchport trunk allowed VLAN all
+ no shutdown
+!
+!
+interface range FastEthernet 0/1-24
+ switchport mode access 
+ switchport access vlan 5
+ switchport port-security
+ switchport port-security mac-address sticky 
+ switchport port-security violation shutdown
+ ! switchport port-security violation restrict
+ ! switchport port-security violation protect
+ switchport port-security maximum 1
+ no cdp enable
+ shutdown
+ exit
+!
+interface fastEthernet0/1
+ switchport mode access
+ switchport access vlan 100
+ spanning-tree portfast
+ no shutdown
+!
+interface fastEthernet0/2
+ switchport mode access
+ switchport access vlan 99
+ spanning-tree portfast
+ no shutdown
+!
+interface fastEthernet0/3
+ switchport mode access 
+ switchport access vlan 2
+ spanning-tree portfast
+ no shutdown
+ exit
+!
+interface fastEthernet0/4
+ switchport mode access 
+ switchport access vlan 2
+ spanning-tree portfast
+ no shutdown
+ exit
+!
+ip domain-name GS11Lab
+crypto key generate rsa
+ip ssh version 2
+ip ssh authentication-retries 3
+ip ssh time-out 120
+!
+username admin privilege 15 secret cisco
+!
+line console 0
+ password cisco
+ privilege level 15
+ logging synchronous
+ login
+ exit
+line vty 0 4
+ login local
+ transport input ssh
+ logging synchronous
+ ip ssh version 2
+ exit
+!
+end
+copy running-config startup-config
+! wr
